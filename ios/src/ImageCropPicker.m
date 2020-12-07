@@ -517,6 +517,24 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
     return @"";
 }
 
+- (NSString *)determineExtensionFromImageData:(NSData *)data {
+    uint8_t c;
+    [data getBytes:&c length:1];
+
+    switch (c) {
+        case 0xFF:
+            return @".jpg";
+        case 0x89:
+            return @".png";
+        case 0x47:
+            return @".gif";
+        case 0x49:
+        case 0x4D:
+            return @".tiff";
+    }
+    return @".jpg";
+}
+
 - (void)qb_imagePickerController:
 (QBImagePickerController *)imagePickerController
           didFinishPickingAssets:(NSArray *)assets {
@@ -842,7 +860,9 @@ RCT_EXPORT_METHOD(openCropper:(NSDictionary *)options
     // create temp file
     NSString *tmpDirFullPath = [self getTmpDirectory];
     NSString *filePath = [tmpDirFullPath stringByAppendingString:[[NSUUID UUID] UUIDString]];
-    filePath = [filePath stringByAppendingString:@".jpg"];
+
+    NSString *extension = [self determineExtensionFromImageData:data];
+    filePath = [filePath stringByAppendingString:extension];
     
     // save cropped file
     BOOL status = [data writeToFile:filePath atomically:YES];
